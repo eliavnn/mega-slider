@@ -1,8 +1,14 @@
 
+import { Card } from '#build/components';
+
+import { Transition } from 'vue';
+
+import { transform } from '@vue/compiler-core';
+
 <template>
     <!-- card -->
-    <div class="rounded-[40px] overflow-hidden absolute translate left-1/2">
-        <div class="w-[700px] aspect-video bg-orange-200 relative shadow-lg shadow-stone-500  border-stone-500">
+    <div ref="card" class="card wrapper rounded-[40px] overflow-hidden absolute " :class="props.position">
+        <div class="w-full aspect-video bg-orange-200 relative shadow-lg shadow-stone-500  border-stone-500">
             <div class="absolute gradient w-full bottom-0 p-14">
                 <h4 class="text-8xl text-slate-300">
                     {{ text }}
@@ -20,25 +26,24 @@
 const props = defineProps<{
     imgSrc: string,
     text: string,
-    index: number
+    position: string
 }>()
 
-const translatePx = computed(() => {
-    return `${props.index * 90}px`
-})
+const emits = defineEmits<{
+    onCardRender: [card: HTMLDivElement | null]
+}>()
 
-const scale = computed(() => {
-    return  1 + parseFloat(`0.${props.index}`)
+const card = ref<HTMLDivElement | null>(null)
+
+onMounted(() => {
+    
 })
 
 </script>
 
 <style  scoped>
-.translate {
 
-    transform: translate(-50%, v-bind(translatePx)) scale(v-bind(scale));
 
-}
 
 .gradient {
         background: rgb(8,1,9);

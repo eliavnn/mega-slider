@@ -1,67 +1,80 @@
 
+import { set } from 'nuxt/dist/app/compat/capi';
+
+import { set } from 'nuxt/dist/app/compat/capi';
+
+import cardVue from './card.vue';
+
+import cardVue from './card.vue';
+
+import cardVue from './card.vue';
+
 import { popScopeId } from 'vue';
 
 import { SliderNav } from '#build/components';
 
 import { Card } from '#build/components';
 <template>
-    <div class="h-[100vh] bg-stone-600 pt-36 px-24">
+    <div class="h-[100vh]  bg-stone-600 pt-48 px-32 isolate">
         <!-- Cards wrapper -->
-        <div class="w-full h-fit relative">
-            <Card  
-            :imgSrc="prevPic.src" 
-            :text="prevPic.text"
-            :index="0"
+        <div class="w-5/6 mx-auto  relative">
+            <Card  v-for="img in imgs"
+            :imgSrc="img.src" 
+            :text="img.text"
+            :position="img.position"
             />
-            <Card  
-            :imgSrc="nextPic.src" 
-            :text="nextPic.text"
-            :index="1"
-            />
-            <Card  
-            :imgSrc="frontPic.src" 
-            :text="frontPic.text"
-            :index="2"
-            />
+            <SliderNav 
+                @on-next-click="setCurrentIndex()"
+                class="fixed right-[10%] top-1/2 -translate-y-1/2  z-10"/>
         </div>
-        <SliderNav 
-        @on-next-click="setCurrentIndex()"
-        class="absolute right-0 top-1/2 -translate-y-1/2 pr-40"
-        />
     </div>
 </template>
 
 <script setup lang="ts">
+import { gsap } from "gsap";
+
 interface IPic {
     text: string
     src: string
+    position: string
 }
 
 
 const imgs: IPic[] = reactive([
     {
         text: "Massaggi",
-        src: "images/massage.jpg"
+        src: "images/massage.jpg",
+        position: "front",
     },
     {
         text: "Meditazioni",
-        src: "images/meditation.jpg"
+        src: "images/meditation.jpg",
+        position: "next"
     },
     {
         text: "Pilates",
-        src: "images/pilates.jpg"
+        src: "images/pilates.jpg",
+        position: "prev"
     },
 ])
 
 
-let currentIndex: int = ref(0)
-let frontPic: IPic = computed(() => imgs[currentIndex.value])
 
-//L'immagine ultima
-let prevPic: IPic = computed(() => imgs[currentIndex.value - 1] ?? imgs[imgs.length - 1])
 
-//L'immagine dietro quella frontale
-let nextPic: IPic = computed(() => imgs[currentIndex.value + 1] ?? imgs[0])
+let currentIndex = ref(0)
+
+const setPositions = () => {
+    let front: IPic = imgs[currentIndex.value]
+    front.position = "front"
+
+    let prev: IPic = imgs[currentIndex.value - 1] ?? imgs[imgs.length - 1]
+    prev.position = "prev"
+
+    let next = imgs[currentIndex.value + 1] ?? imgs[0]
+    next.position = "next"
+
+    // setAttrs()
+}
 
 function setCurrentIndex(){
     if (imgs[currentIndex.value + 1]){
@@ -72,9 +85,28 @@ function setCurrentIndex(){
 }
 
 
-watch(currentIndex, (newIndex, oldIndex) => {
-    
+function setAttrs() {
+    gsap.set(".card.next", {yPercent: -15, scale: 0.9, zIndex: 2})
+    gsap.set(".card.prev", {yPercent: -30, scale: 0.8, zIndex: 1})
+    gsap.set(".card.front", {zIndex: 3})
+}
+
+const nextMotion = () => {
+    const tl = gsap.timeline({duration: 1, ease: "power3.inOut", onComplete: () => setPositions()})
+    tl.to(".card.front",{xPercent: 200, rotate: 60})
+    tl.to(".card.next",{scale: 1, yPercent: 0, zIndex: 3}, "<")
+    tl.to(".card.prev", {yPercent: -15, scale: 0.9, zIndex: 2}, "<.2")
+    tl.to(".card.front",{xPercent: 0, yPercent: -30, rotate: 0,  zIndex: 1, scale: 0.8, opacity:1}, "<")
+}
+
+watch(currentIndex, () => {
+    nextMotion()
 })
+
+onMounted(() => {
+    setAttrs()
+})
+
 </script>
 
 <style lang="scss" scoped>
